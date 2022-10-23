@@ -55,13 +55,23 @@
                 const ctx = canvas.getContext('2d')
 
                 const imageData = await decode(canvas, ctx, bytes)
+
+                console.log(imageData)
+
                 const pixels = []
 
                 // Do the actual work of inverting the colors.
                 for (let i = 0; i < imageData.data.length; i += 4) {
-                    var color = imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2];
+                    if ((imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) > 0) {
+                        pixels.push(1)
+                    } else {
+                        if (imageData.data[i + 3] > 150) {
+                            pixels.push(1)
+                        } else {
+                            pixels.push(0)
+                        }
+                    }
 
-                    (color > 0) ? pixels.push(1) : pixels.push(0);
                 }
 
                 const bitmap = [];
