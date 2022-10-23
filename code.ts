@@ -2,13 +2,15 @@ figma.currentPage.selection.forEach(async (node) => {
   // If node is not a vector, text or rectangel, skip it
   if (!node || !node.type.match(/^(VECTOR|TEXT|RECTANGLE)$/)) return;
 
-  // If node is a vector or text, convert it to a rectangle
-  if (node.type.match(/^(VECTOR|TEXT)$/)) {
-    let vectorImage = await node.exportAsync({ format: "PNG" });
-    let image = figma.createImage(vectorImage);
-    node = figma.createRectangle();
-    node.fills = [{ type: "IMAGE", imageHash: image.hash, scaleMode: "FILL" }];
+  if (node.type === "TEXT") {
+    // If node is a text, convert it to a vector
+    node = figma.flatten([node]);
   }
+
+  let tempBytes = await node.exportAsync({ format: "PNG" });
+  let temImage = figma.createImage(tempBytes);
+  node = figma.createRectangle();
+  node.fills = [{ type: "IMAGE", imageHash: temImage.hash, scaleMode: "FILL" }];
 
   // Perform the appropriate transformation
   // to get a value that can be used easily
@@ -30,4 +32,8 @@ figma.currentPage.selection.forEach(async (node) => {
 
   // Send the raw bytes of the file to the worker.
   figma.ui.postMessage(image);
+
+  // We need to remove the node because we created
+  // it just to export the image
+  node.remove();
 });

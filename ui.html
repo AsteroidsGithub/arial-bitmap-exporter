@@ -7,7 +7,17 @@
                 font-family: sans-serif;
             }
 
-            #code {
+            h2 {
+                margin-bottom: 4px;
+            }
+
+            .split {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .block {
                 background-color: var(--figma-color-bg);
                 color: var(--figma-color-text);
                 font-family: monospace;
@@ -24,7 +34,10 @@
         </h1>
         <p>This is will turn a figma flat rectangle into a byte array that can be imported in the kernel as a new font.</p>
         <h2>Code:</h2>
-        <p id="code"></p>
+        <div class="split">
+            <p class="block" id="code" style="flex-shrink: 1;"></p>
+            <p class="block" id="block" style="flex-grow: 1;"></p>
+        </div>
 
         <script>
             async function decode(canvas, ctx, bytes) {
@@ -56,8 +69,6 @@
 
                 const imageData = await decode(canvas, ctx, bytes)
 
-                console.log(imageData)
-
                 const pixels = []
 
                 // Do the actual work of inverting the colors.
@@ -79,9 +90,14 @@
                     bitmap.push("b(" + pixels.slice(i, i + 8).join("") + "),");
                 }
 
+
+
                 p = document.getElementById('code');
                 p.innerHTML = bitmap.join("</br>");
-                document.body.appendChild(p);
+
+                p = document.getElementById('block');
+                p.innerHTML = bitmap.map(x => x.split("").map(c => c == 0 ? "⬜️" : c == 1 ? "⬛️" : c).slice(2, 10).join("")).join("</br>");
+
 
             }
         </script>
