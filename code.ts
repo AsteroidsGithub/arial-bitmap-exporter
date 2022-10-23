@@ -1,14 +1,17 @@
 figma.currentPage.selection.forEach(async (node) => {
-  // If node is not a vector, text or rectangel, skip it
-  if (!node || !node.type.match(/^(VECTOR|TEXT|RECTANGLE)$/)) return;
+  // Prevents the plugin from remove data from the
+  // original node
+  node = node.clone();
 
-  if (node.type === "TEXT") {
-    // If node is a text, convert it to a vector
-    node = figma.flatten([node]);
-  }
+  // Flatten everything that isn't already a base shape
+  if (node.type !== "RECTANGLE") node = figma.flatten([node]);
 
   let tempBytes = await node.exportAsync({ format: "PNG" });
   let temImage = figma.createImage(tempBytes);
+
+  // Destroy the first temp node
+  node.remove();
+
   node = figma.createRectangle();
   node.fills = [{ type: "IMAGE", imageHash: temImage.hash, scaleMode: "FILL" }];
 
