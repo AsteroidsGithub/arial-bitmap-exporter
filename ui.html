@@ -1,0 +1,79 @@
+<html>
+    <head>
+        <style>
+            body {
+                background-color: var(--figma-color-bg);
+                color: var(--figma-color-text);
+                font-family: sans-serif;
+            }
+
+            #code {
+                background-color: var(--figma-color-bg);
+                color: var(--figma-color-text);
+                font-family: monospace;
+                font-size: 12px;
+                padding: 10px;
+                border: 1px solid var(--figma-color-border);
+                border-radius: 4px;
+            }
+        </style>
+        </head>
+    <body>
+        <h1>
+            Arial Bitmap Font Exporter
+        </h1>
+        <p>This is will turn a figma flat rectangle into a byte array that can be imported in the kernel as a new font.</p>
+        <h2>Code:</h2>
+        <p id="code"></p>
+
+        <script>
+            async function decode(canvas, ctx, bytes) {
+                const url = URL.createObjectURL(new Blob([bytes]))
+                const image = await new Promise((resolve, reject) => {
+                    const img = new Image()
+                    img.onload = () => resolve(img)
+                    img.onerror = () => reject()
+                    img.src = url
+                })
+                canvas.width = image.width
+                canvas.height = image.height
+                ctx.drawImage(image, 0, 0)
+                const imageData = ctx.getImageData(0, 0, image.width, image.height)
+                return imageData
+            }
+
+            // Create an event handler to receive messages from the main
+            // thread.
+            window.onmessage = async (event) => {
+                // Just get the bytes directly from the pluginMessage since
+                // that's the only type of message we'll receive in this
+                // plugin. In more complex plugins, you'll want to check the
+                // type of the message.
+                const bytes = event.data.pluginMessage
+
+                const canvas = document.createElement('canvas')
+                const ctx = canvas.getContext('2d')
+
+                const imageData = await decode(canvas, ctx, bytes)
+                const pixels = []
+
+                // Do the actual work of inverting the colors.
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    var color = imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2];
+
+                    (color > 0) ? pixels.push(1) : pixels.push(0);
+                }
+
+                const bitmap = [];
+                for (let i = 0; i < pixels.length; i += 8) {
+                    bitmap.push("b(" + pixels.slice(i, i + 8).join("") + "),");
+                }
+
+                p = document.getElementById('code');
+                p.innerHTML = bitmap.join("</br>");
+                document.body.appendChild(p);
+
+            }
+        </script>
+    </body>
+</html>
